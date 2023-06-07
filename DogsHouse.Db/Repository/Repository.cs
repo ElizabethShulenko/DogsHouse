@@ -9,15 +9,20 @@ namespace DogsHouse.Db.Repository
         private readonly DogsHouseDbContext _context;
         private readonly DbSet<T> _dbSet;
 
-        public Repository(string connectionString)
+        public Repository(DogsHouseDbContext context)
         {
-            _context = new DogsHouseDbContext(connectionString);
+            _context = context;
             _dbSet = _context.Set<T>();
         }
 
-        public IEnumerable<T> GetAll()
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
             return _dbSet.ToList();
+        }
+        public async Task AddAsync(T entity)
+        {
+            await _dbSet.AddAsync(entity);
+            await _context.SaveChangesAsync();
         }
     }
 }

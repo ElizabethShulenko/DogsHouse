@@ -1,4 +1,7 @@
 using DogsHouse.Db;
+using DogsHouse.Db.Entities;
+using DogsHouse.Db.Repository;
+using DogsHouseApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -6,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 builder.Services.AddScoped<DogsHouseDbContext>(provider =>
 {
     var configuration = new ConfigurationBuilder()
@@ -15,6 +19,10 @@ builder.Services.AddScoped<DogsHouseDbContext>(provider =>
 
     return new DogsHouseDbContext(configuration.GetConnectionString("DogsHouseDbConnectionString"));
 });
+
+builder.Services.AddScoped<IRepository<Dog>, Repository<Dog>>();
+
+builder.Services.AddScoped<IDogService, DogService>();
 
 var app = builder.Build();
 

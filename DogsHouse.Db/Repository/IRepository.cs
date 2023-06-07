@@ -4,6 +4,7 @@ namespace DogsHouse.Db.Repository
 {
     public interface IRepository<TEntity> where TEntity : Entity
     {
-        IEnumerable<TEntity> GetAll();
+        Task<IEnumerable<TEntity>> GetAllAsync();
+        Task AddAsync(TEntity entity);
     }
 }

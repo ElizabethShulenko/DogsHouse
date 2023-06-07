@@ -1,12 +1,12 @@
 ﻿using DogsHouse.Db.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace DogsHouse.Db
 {
     public class DogsHouseDbContext : DbContext
     {
         private readonly string _connectionString;
+
         public DogsHouseDbContext(string connectionString)
         {
             _connectionString = connectionString;
