@@ -17,7 +17,7 @@ namespace DogsHouse.Db.Repository
 
         public async Task<IEnumerable<T>> GetAllAsync()
         {
-            return _dbSet.ToList();
+            return _dbSet.AsQueryable();
         }
         public async Task AddAsync(T entity)
         {

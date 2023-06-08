@@ -1,7 +1,6 @@
-﻿using DogsHouse.Db.Entities;
+﻿using DogsHouseApp.Models;
 using DogsHouseApp.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.IdentityModel.Tokens;
 
 namespace DogsHouseApp.Controllers
 {
@@ -15,34 +14,63 @@ namespace DogsHouseApp.Controllers
         }
 
         [HttpGet("Ping")]
-        public string Ping()
+        public async Task<IActionResult> Ping()
         {
-            return "Dogs Hpuse service. Version 1.0.1";
+            return Ok("Dogs House service. Version 1.0.1");
         }
 
-        [HttpGet("dogs")]
-        public async Task<IEnumerable<Dog>> Dogs(string attribute, string order, int pageNumber = 0, int pageSize = 0)
+        [HttpGet("Dogs")]
+        public async Task<IActionResult> Dogs(string attribute = null, string order = null, int? pageNumber = null, int? pageSize = null)
         {
-            var result = await _dogService.GetAllAsync();
-
-            if (!String.IsNullOrEmpty(attribute))
+            try
             {
-                result = _dogService.Sort(result, attribute, order);
-            }
-            if (pageNumber != 0 && pageSize != 0)
-            {
-                result = _dogService.GetDogsByPage(result, pageNumber, pageSize);
-            }
+                var result = await _dogService.GetDogsAsync(attribute, order, pageNumber, pageSize);
 
-            return result;
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            
         }
 
         [HttpPost("Dog")]
-        public async Task<string> Dog(string name, string color, double tailLength, double weight)
+        public async Task<IActionResult> Dog([FromBody]DogModel dogModel)
         {
-            await _dogService.AddDogAsync(name, color, tailLength, weight);
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest($"Request model is not valid");
+                }
 
-            return "successfully added new dog!";
+                if (await _dogService.IsDogNameAlreadyExistsAsync(dogModel.Name))
+                {
+                    return BadRequest($"Dog with name {dogModel.Name} is already exist!");
+                }
+                
+                if (dogModel.Weight <= 0)
+                {
+                    return BadRequest($"Weight is not valid");
+                }
+                
+                if (dogModel.TailLength <= 0)
+                {
+                    return BadRequest($"Tail length is not valid");
+                }
+
+                await _dogService.AddDogAsync(dogModel);
+
+                return Ok("Created");
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }           
+            
         }
     }
 }

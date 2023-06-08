@@ -7,6 +7,8 @@ namespace DogsHouse.Db
     {
         private readonly string _connectionString;
 
+        public DogsHouseDbContext() { }
+
         public DogsHouseDbContext(string connectionString)
         {
             _connectionString = connectionString;

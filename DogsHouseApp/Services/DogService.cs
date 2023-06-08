@@ -1,5 +1,6 @@
 ﻿using DogsHouse.Db.Entities;
 using DogsHouse.Db.Repository;
+using DogsHouseApp.Models;
 
 namespace DogsHouseApp.Services
 {
@@ -12,27 +13,66 @@ namespace DogsHouseApp.Services
             _repository = repository;
         }
 
-        public async Task AddDogAsync(string name, string color, double tailLength, double weight)
+        public async Task AddDogAsync(DogModel dogModel)
         {
-            var dog = new Dog() { Name = name, Color = color, TailLength = tailLength, Weight = weight };
+            if (await IsDogNameAlreadyExistsAsync(dogModel.Name))
+            {
+                throw new ArgumentException($"Dog with name {dogModel.Name} is already exist");
+            }
+
+            if (dogModel.Weight <= 0)
+            {
+                throw new ArgumentException("Weight is not valid");
+            }
+
+            if (dogModel.TailLength <= 0)
+            {
+                throw new ArgumentException("TailLength is not valid");
+            }
+
+            var dog = new Dog()
+            {
+                Name = dogModel.Name,
+                Color = dogModel.Color,
+                TailLength = dogModel.TailLength,
+                Weight = dogModel.Weight
+            };
 
             await _repository.AddAsync(dog);
         }
-        public async Task<IEnumerable<Dog>> GetAllAsync()
-        {
-            var result = await _repository.GetAllAsync();
 
-            return result;
+        public async Task<IEnumerable<Dog>> GetDogsAsync(string attribute = null, string order = null, int? pageNumber = null, int? pageSize = null)
+        {
+            var dogs = await _repository.GetAllAsync();
+
+            if (!string.IsNullOrEmpty(attribute) && !string.IsNullOrEmpty(order))
+            {
+                dogs = Sort(dogs, attribute, order);
+            }
+
+            if (pageNumber.HasValue && pageSize.HasValue && pageNumber >= 1 && pageSize > 0)
+            {
+                dogs = GetPaginatedDogs(dogs, pageNumber.Value, pageSize.Value);
+            }
+
+            return dogs.ToList();
         }
 
-        public IEnumerable<Dog> GetDogsByPage(IEnumerable<Dog> dogs, int pageNumber, int pageSize)
+        public async Task<bool> IsDogNameAlreadyExistsAsync(string name)
+        {
+            var dogs = await _repository.GetAllAsync();
+
+            return dogs.Any(dog => dog.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+        }
+
+        private IEnumerable<Dog> GetPaginatedDogs(IEnumerable<Dog> dogs, int pageNumber, int pageSize)
         {
             var result = dogs.Skip((pageNumber - 1) * pageSize).Take(pageSize);
 
             return result;
         }
 
-        public IEnumerable<Dog> Sort(IEnumerable<Dog> dogs, string attribute, string order)
+        private IEnumerable<Dog> Sort(IEnumerable<Dog> dogs, string attribute, string order)
         {
             var isDesc = order == "desc";
 
@@ -46,7 +86,7 @@ namespace DogsHouseApp.Services
                 case "color":
                     keySelector = new Func<Dog, string>(m => m.Color);
                     break;
-                case "tail length":
+                case "taillength":
                     keySelector = new Func<Dog, object>(m => m.TailLength);
                     break;
                 case "weight":
@@ -58,7 +98,7 @@ namespace DogsHouseApp.Services
 
             if (keySelector != null)
             {
-                dogs = isDesc 
+                dogs = isDesc
                     ? dogs.OrderByDescending(keySelector)
                     : dogs.OrderBy(keySelector);
             }

@@ -1,4 +1,5 @@
 ﻿using DogsHouse.Db.Entities;
+using System.Linq.Expressions;
 
 namespace DogsHouse.Db.Repository
 {
